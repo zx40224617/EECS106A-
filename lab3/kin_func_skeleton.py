@@ -105,6 +105,9 @@ def skew_3d(omega):
     """
 
     # YOUR CODE HERE
+    return np.array([[0, -omega[2], omega[1] ], 
+                    [omega[2], 0, -omega[0]], 
+                    [-omega[1], omega[0], 0]])
 
 def rotation_3d(omega, theta):
     """
@@ -119,7 +122,14 @@ def rotation_3d(omega, theta):
     """
 
     # YOUR CODE HERE
-
+    I = np.eye(3)
+    w_hat = skew_3d(omega)
+    w_mag = np.sqrt(omega[0] ** 2 + omega[1] ** 2 + omega[2] ** 2)
+    w_hat_square = np.dot(w_hat, w_hat)
+    return I + (w_hat / w_mag * np.sin(w_mag * theta)) + (w_hat_square / w_mag ** 2 * (1 - np.cos(w_mag * theta)))
+    
+    
+    
 def hat_3d(xi):
     """
     Converts a 3D twist to its corresponding 4x4 matrix representation
@@ -132,6 +142,10 @@ def hat_3d(xi):
     """
 
     # YOUR CODE HERE
+    return np.array([[0, -xi[5], xi[4],  xi[0]],
+                     [xi[5], 0, -xi[3], xi[1]], 
+                     [-xi[4], xi[3], 0, xi[2]], 
+                      [0, 0, 0, 0]])
 
 def homog_3d(xi, theta):
     """
@@ -146,6 +160,23 @@ def homog_3d(xi, theta):
     """
 
     # YOUR CODE HERE
+    v = np.array(xi[0:3])
+    w = np.array(xi[3:])
+    w_hat = skew_3d(w)
+    v_theta = theta * v
+    if (xi[3] == 0 and xi[4] == 0 and xi[5] == 0):
+        return np.array([[1, 0, 0, v_theta[0]],
+                         [0, 1, 0, v_theta[1]], 
+                         [0, 0, 1, v_theta[2]], 
+                         [0, 0, 0, 1]])
+    else: 
+        R = rotation_3d(w, theta)
+        I = np.eye(3)
+        w_hat = skew_3d(w)
+        w_mag = np.sqrt(w[0] ** 2 + w[1] ** 2 + w[2] ** 2)
+        A = (1 / w_mag ** 2) * (np.dot((I - R), np.dot(w_hat, v)) + np.dot(np.outer(w, w), v_theta))
+        M = np.hstack((R, A.reshape(-1, 1))) 
+        return  np.vstack((M, np.array([0, 0, 0, 1])))
 
 
 def prod_exp(xi, theta):
@@ -162,6 +193,18 @@ def prod_exp(xi, theta):
     """
 
     # YOUR CODE HERE
+    exp = []
+    final = np.zeros((4, 4))
+
+    for i in range(len(theta)):
+        x_column = xi[:, i]
+        e = homog_3d(x_column, theta[i])
+        exp.append(e)
+
+    final += exp[0]
+    for i in range(1, len(theta)):
+        final = np.dot(final, exp[i])
+    return final
 
 #---------------------------------TESTING CODE---------------------------------
 #-------------------------DO NOT MODIFY ANYTHING BELOW HERE--------------------

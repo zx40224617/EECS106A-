@@ -23,9 +23,8 @@ def controller(turtlebot_frame, goal_frame):
   """
 
   ################################### YOUR CODE HERE ##############
-
   #Create a publisher and a tf buffer, which is primed with a tf listener
-  pub = rospy.Publisher('INSTERT TOPIC HERE', Twist, queue_size=10)
+  pub = rospy.Publisher('/cmd_vel', Twist, queue_size=10)
   tfBuffer = tf2_ros.Buffer()
   tfListener = tf2_ros.TransformListener(tfBuffer)
   
@@ -33,17 +32,22 @@ def controller(turtlebot_frame, goal_frame):
   # a 10Hz publishing rate
   r = rospy.Rate(10) # 10hz
 
-  K1 = 0.3
-  K2 = 1
+  K1 = 0.1
+  K2 = 0.5
   # Loop until the node is killed with Ctrl-C
   while not rospy.is_shutdown():
     try:
-      trans = tfBuffer.lookup_transform(INSERT FRAME HERE, INSERT FRAME HERE, rospy.Time())
-
+      trans = tfBuffer.lookup_transform(goal_frame, turtlebot_frame, rospy.Time())
       # Process trans to get your state error
       # Generate a control command to send to the robot
-
-      control_command = # Generate this
+      twist = Twist()
+      #x = K1 * ()
+      x = trans.transform.translation.x
+      theta = trans.transform.translation.y
+      print(x)
+      twist.linear.x, twist.linear.y, twist.linear.z = [K1 * x, 0, 0]
+      twist.angular.x, twist.angular.y, twist.angular.z = [0, 0, K2 * theta]
+      control_command = twist
 
       #################################### end your code ###############
 
