@@ -27,7 +27,7 @@ from intera_interface import CHECK_VERSION
 
 
 def map_keyboard(side):
-    limb = intera_interface.Limb(side)
+    limb = intera_interface.Limb("right")
 
     try:
         gripper = intera_interface.Gripper(side + '_gripper')
@@ -78,30 +78,40 @@ def map_keyboard(side):
         '9': (set_g, "calibrate", side+" gripper calibrate")
         })
     done = False
-    print("Controlling joints. Press ? for help, Esc to quit.")
+    joints = limb.joint_names()
+    print("Controlling joints. Please insert the angles according to the joints")
+    print("Angles for s0")
+    s0 = float(input())
+    #print(s0)
+    print("Angles for s1")
+    s1 = float(input())
+    #print(s1)
+    print("Angles for e0")
+    e0 = float(input())
+    print("Angles for e1")
+    e1 = float(input())
+    print("Angles for w0")
+    w0 = float(input())
+    print("Angles for w1")
+    w1 = float(input())
+    print("Angles for w2")
+    w2 = float(input())
+
+
+    #(s0, s1, e0, e1, w0, w1, w2)
+    test_dict = {}
+    test_dict[joints[0]] = s0
+    test_dict[joints[1]] = s1
+    test_dict[joints[2]] = e0
+    test_dict[joints[3]] = e1
+    test_dict[joints[4]] = w0
+    test_dict[joints[5]] = w1
+    test_dict[joints[6]] = w2
+    print(test_dict)
     while not done and not rospy.is_shutdown():
-        c = intera_external_devices.getch()
-        if c:
-            #catch Esc or ctrl-c
-            if c in ['\x1b', '\x03']:
-                done = True
-                rospy.signal_shutdown("Example finished.")
-            elif c in bindings:
-                cmd = bindings[c]
-                if c == '8' or c == 'i' or c == '9':
-                    cmd[0](cmd[1])
-                    print("command: %s" % (cmd[2],))
-                else:
-                    #expand binding to something like "set_j(right, 'j0', 0.1)"
-                    cmd[0](*cmd[1])
-                    print("command: %s" % (cmd[2],))
-            else:
-                print("key bindings: ")
-                print("  Esc: Quit")
-                print("  ?: Help")
-                for key, val in sorted(list(bindings.items()),
-                                       key=lambda x: x[1][2]):
-                    print("  %s: %s" % (key, val[2]))
+        limb.set_joint_position_speed(0.2)
+        limb.set_joint_positions(test_dict)
+
 
 def main():
     """RSDK Joint Position Example: Keyboard Control
