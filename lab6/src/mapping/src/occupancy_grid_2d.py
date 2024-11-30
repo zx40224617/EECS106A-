@@ -51,14 +51,37 @@ class OccupancyGrid2d(object):
 
         # Dimensions and bounds.
         # TODO! You'll need to set values for class variables called:
-        # -- self._x_num
-        # -- self._x_min
-        # -- self._x_max
-        # -- self._x_res # The resolution in x. Note: This isn't a ROS parameter. What will you do instead?
-        # -- self._y_num
-        # -- self._y_min
-        # -- self._y_max
-        # -- self._y_res # The resolution in y. Note: This isn't a ROS parameter. What will you do instead?
+        if not rospy.has_param("~x/num"):
+            return False
+        self._x_num = rospy.get_param("~x/num")
+
+        if not rospy.has_param("~x/min"):
+            return False
+        self._x_min = rospy.get_param("~x/min")
+
+        if not rospy.has_param("~x/max"):
+            return False
+        self._x_max = rospy.get_param("~x/max")
+
+        #if not rospy.has_param("~x_res"):
+        #    return False
+        self._x_res = (self._x_max - self._x_min) / self._x_num # The resolution in x. Note: This isn't a ROS parameter. What will you do instead?
+        
+        if not rospy.has_param("~y/num"):
+            return False
+        self._y_num = rospy.get_param("~y/num")
+
+        if not rospy.has_param("~y/min"):
+            return False
+        self._y_min = rospy.get_param("~y/min")
+
+        if not rospy.has_param("~y/max"):
+            return False
+        self._y_max = rospy.get_param("~y/max")
+
+        #if not rospy.has_param("~y_res"):
+        #    return False
+        self._y_res = (self._y_max - self._y_min) / self._y_num # The resolution in y. Note: This isn't a ROS parameter. What will you do instead?
 
         # Update parameters.
         if not rospy.has_param("~update/occupied"):
@@ -83,13 +106,23 @@ class OccupancyGrid2d(object):
 
         # Topics.
         # TODO! You'll need to set values for class variables called:
-        # -- self._sensor_topic
-        # -- self._vis_topic
+        if not rospy.has_param("~topics/sensor"):
+            return False
+        self._sensor_topic = rospy.get_param("~topics/sensor")
+
+        if not rospy.has_param("~topics/vis"):
+            return False
+        self._vis_topic = rospy.get_param("~topics/vis")
 
         # Frames.
         # TODO! You'll need to set values for class variables called:
-        # -- self._sensor_frame
-        # -- self._fixed_frame
+        if not rospy.has_param("~frames/sensor"):
+            return False
+        self._sensor_frame = rospy.get_param("~frames/sensor")
+
+        if not rospy.has_param("~frames/fixed"):
+            return False
+        self._fixed_frame = rospy.get_param("~frames/fixed")
 
         return True
 
@@ -147,6 +180,10 @@ class OccupancyGrid2d(object):
 
             # Get angle of this ray in fixed frame.
             # TODO!
+            angle_min = msg.angle_min
+            angle_max = msg.angle_max
+            angle_increment = msg.angle_increment
+
 
             # Throw out this point if it is too close or too far away.
             if r > msg.range_max:
@@ -163,6 +200,22 @@ class OccupancyGrid2d(object):
             # Only update each voxel once. 
             # The occupancy grid is stored in self._map
             # TODO!
+            step = np.minimum(self._x_res, self._y_res)
+            for dis in np.arange(r, 0, -step):
+                x = dis * np.cos(angle_min + angle_increment * idx)
+                y = dis * np.sin(angle_min + angle_increment * idx)
+                grid_x, grid_y = self.PointToVoxel(x, y)
+                if (r == dis):
+                    if (self._map[grid_x, grid_y] + self._occupied_update > self._occupied_threshold ): 
+                        self._map[grid_x, grid_y] = self._occupied_threshold
+                    else : 
+                        self._map[grid_x, grid_y] += self._occupied_update
+                else : 
+                    if (self._map[grid_x, grid_y] + self._free_update < self._free_threshold ): 
+                        self._map[grid_x, grid_y] = self._free_threshold
+                    else : 
+                        self._map[grid_x, grid_y] += self._free_update
+
 
         # Visualize.
         self.Visualize()

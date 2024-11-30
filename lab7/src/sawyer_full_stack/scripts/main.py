@@ -60,12 +60,14 @@ def lookup_tag(tag_number):
 
     
     # TODO: initialize a tf buffer and listener as in lab 3
-
+    tfBuffer = tf2_ros.Buffer()
+    tfListener = tf2_ros.TransformListener(tfBuffer)
+    tag_frame = f"ar_marker_{tag_number}"
     try:
         # TODO: lookup the transform and save it in trans
         # The rospy.Time(0) is the latest available 
         # The rospy.Duration(10.0) is the amount of time to wait for the transform to be available before throwing an exception
-        trans = tfBuffer.lookup_transform(..., ..., rospy.Time(0), rospy.Duration(10.0))
+        trans = tfBuffer.lookup_transform("base", tag_frame, rospy.Time(0), rospy.Duration(10.0))
     except Exception as e:
         print(e)
         print("Retrying ...")

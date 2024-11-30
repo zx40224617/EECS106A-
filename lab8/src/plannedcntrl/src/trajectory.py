@@ -36,10 +36,18 @@ def plot_trajectory(waypoints):
 
 def bezier_curve(p0, p1, p2, p3, t):
     """Calculate a point on a cubic Bezier curve defined by p0, p1, p2, and p3 at parameter t."""
-    return ## TODO
+    return (1 - t) **3 * p0 + 3 * (1 - t)**2 * t * p1 + 3 * (1 - t) * t**2 * p2 + t**3 * p3
 
 def generate_bezier_waypoints(x1, y1, theta1, x2, y2, theta2, offset=1.0, num_points=10):
-    # 1. Calculate direction vector based on yaw
+    # 1. Calculate direction vector based on 
+    
+    
+    
+    
+    
+    
+    
+
     direction_start = np.array([np.cos(theta1), np.sin(theta1)])
     direction_end = np.array([-np.cos(theta2), -np.sin(theta2)])  # Opposite direction for the end point
 
@@ -73,11 +81,11 @@ def plan_curved_trajectory(target_position):
     Returns:
     - A list of waypoints [(x, y, theta), ...] where type can be 'rotate' or 'move' and value is the amount to rotate in radians or move in meters.
     """
-    tfBuffer = ## TODO: initialize a buffer
-    tfListener = ## TODO: initialize a transform listener
+    tfBuffer = tf2_ros.Buffer() ## TODO: initialize a buffer
+    tfListener = tf2_ros.TransformListener(tfBuffer) ## TODO: initialize a transform listener
     while not rospy.is_shutdown():
         try:
-            trans = ## TODO: apply a lookup transform between our world frame and turtlebot frame
+            trans = tfBuffer.lookup_transform("odom", "base_footprint", rospy.Time(), rospy.Duration(5))## TODO: apply a lookup transform between our world frame and turtlebot frame
             print(trans)
             break
         except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException) as e:
@@ -88,13 +96,16 @@ def plan_curved_trajectory(target_position):
         [trans.transform.rotation.x, trans.transform.rotation.y,
             trans.transform.rotation.z, trans.transform.rotation.w])
     
+    rotaional_matric = np.array([[np.cos(yaw), -np.sin(yaw)],
+                        [np.sin(yaw), np.cos(yaw)]])
     
-    x2 = ## TODO: how would you get x2 from our target position? remember this is relative to x1 
-    y2 = ## TODO: how would you get x2 from our target position? remember this is relative to x1 
+    final = rotaional_matric @ np.transpose(np.array([target_position.x, target_position.y]))
+    x2 = final[0] + x1 ## TODO: how would you get x2 from our target position? remember this is relative to x1 
+    y2 = final[1] + y1 ## TODO: how would you get x2 from our target position? remember this is relative to x1 
 
     waypoints = generate_bezier_waypoints(x1, y1, yaw, x2, y2, yaw, offset=0.2, num_points=10)
     plot_trajectory(waypoints)
-
+    print("test2")
     return waypoints
 
 if __name__ == '__main__':
